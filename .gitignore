@@ -1,0 +1,10 @@
+#Ignorar la carpeta outputs y todo su contenido
+/outputs/
+outputs/
+
+#Ignorar cualquier archivo .exe en cualquier carpeta
+*.exe
+
+#Ignorar la carpeta de .vscode
+/.vscode/
+.vscode/
