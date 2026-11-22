@@ -1,7 +1,7 @@
 #include "simuladorSO.h"
 
 // =====================================================================
-//Planificador Round Robin
+//Primer Ajuste
 // =====================================================================
 
 string aTexto(const Bloque& b) {
@@ -12,9 +12,11 @@ string aTexto(const Bloque& b) {
 Memoria::Memoria(int t) : total(t) { bloques.push_back({0, t, 0}); }
 
 // ===================== ALGORITMOS DE COLOCACION ======================
+// Primer ajuste: primer hueco donde cabe
 Memoria::It Memoria::primerAjuste(int tam) {
-    (void)tam;
-    return bloques.end();   // pendiente de implementar
+    for (It it = bloques.begin(); it != bloques.end(); ++it)
+        if (it->esHueco() && it->tamano >= tam) return it;
+    return bloques.end();
 }
 
 Memoria::It Memoria::mejorAjuste(int tam) {
@@ -158,8 +160,19 @@ void Simulador::planificar() {
 }
 
 void Simulador::ejecutarCiclo() {
+    int anchoInterno = 34;
     ciclo++;
-    cout << "\nCICLO " << ciclo << "\n";
+    int espacios = anchoInterno - (6 + to_string(ciclo).length());
+    int izq = espacios / 2;
+    int der = espacios - izq;
+
+    cout << "\n\n╔══════════════════════════════════╗\n";
+    cout << "║"
+         << string(izq, ' ')
+         << "Ciclo " << ciclo
+         << string(der, ' ')
+         << "║\n";
+    cout << "╚══════════════════════════════════╝\n";
 
     entrarProceso();   // 1) memoria
     planificar();      // 2) Round Robin
@@ -188,7 +201,9 @@ void Simulador::correr() {
 }
 
 void Simulador::estadisticas() const {
-    cout << "\nESTADÍSTICAS\n";
+    cout << "╔══════════════════════════════════╗\n";
+    cout << "║           Estadisticas           ║\n";
+    cout << "╚══════════════════════════════════╝\n";
     cout << fixed << setprecision(2);
     cout << "Ciclos simulados:              " << ciclo << "\n";
     cout << "Procesos atendidos (terminados): " << terminados << "\n";
@@ -214,13 +229,16 @@ int leerEntero(const string& msg, int lo, int hi) {
 
 Config configurar() {
     Config c;
+    cout << "╔══════════════════════════════════╗\n";
+    cout << "║           Simulador SO           ║\n";
+    cout << "╚══════════════════════════════════╝\n";
     int m = leerEntero("Tamaño de memoria en MB (1, 4 u 8)", 1, 8);
     while (m != 1 && m != 4 && m != 8) m = leerEntero("Solo 1, 4 u 8 MB", 1, 8);
     c.memoriaKB = m * 1024;
     c.cuantoSistema    = leerEntero("Cuanto del sistema", 1, 100);
     c.tamMaxProceso    = leerEntero("Tamaño máximo de proceso (KB)", SPLIT_MIN, c.memoriaKB);
     c.cuantoMaxProceso = leerEntero("Cuanto máximo por proceso", 1, 1000);
-    cout << "Algoritmo: 1) Primer Ajuste  2) Mejor Ajuste  3) Combinado\n";
+    cout << "Algoritmo: \n1) Primer Ajuste  \n2) Mejor Ajuste  \n3) Combinado\n";
     c.alg = (Algoritmo)leerEntero("Elige", 1, 3);
     c.retardoMs = leerEntero("Retardo inicial entre ciclos (ms)", 0, 10000);
     cin.ignore(10000, '\n');
