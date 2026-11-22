@@ -1,7 +1,7 @@
 #include "simuladorSO.h"
 
 // =====================================================================
-//Estructuras y definicion de funciones 
+//Planificador Round Robin
 // =====================================================================
 
 string aTexto(const Bloque& b) {
@@ -124,9 +124,37 @@ void Simulador::entrarProceso() {
 }
 
 // ===================== PLANIFICADOR ROUND ROBIN ======================
-// TODO (version 2): Round Robin
+// Paso 2: Round Robin - atiende el primero de la cola de listos
 void Simulador::planificar() {
-    cout << "(planificador no implementado)\n";
+    if (colaRR.empty()) {
+        cout << "CPU ociosa\n";
+        return;
+    }
+
+    auto actual = colaRR.front();      // toma el primero de la cola
+    colaRR.pop_front();
+    cout << "Atendiendo proceso " << aTexto(*actual) << "\n";
+
+    int usado = min(cfg.cuantoSistema, actual->cuanto);  // ejecuta un cuanto
+    actual->cuanto -= usado;
+    unidadesCPU += usado;
+
+    if (actual->cuanto > 0) colaRR.push_back(actual);    // no terminó: regresa al final
+    imprimirCola();
+
+    if (actual->cuanto == 0) {                            // terminó
+        cout << "Descargando proceso " << aTexto(*actual) << "\n";
+        terminados++;
+        sumaTurnaround += ciclo - actual->creado + 1;
+        mem.descargar(actual);        // libera memoria (se vuelve hueco)
+        mem.imprimir();
+        if (mem.condensar()) {
+            cout << "Condensando huecos\n";
+            mem.imprimir();
+        }
+    } else {
+        mem.imprimir();
+    }
 }
 
 void Simulador::ejecutarCiclo() {
@@ -171,7 +199,6 @@ void Simulador::estadisticas() const {
     cout << "Ocupación máxima de memoria:   " << ocupacionMax << " %\n";
     cout << "Unidades de CPU ejecutadas:    " << unidadesCPU << "\n";
 }
-
 
 int leerEntero(const string& msg, int lo, int hi) {
     int v;
